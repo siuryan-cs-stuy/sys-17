@@ -16,4 +16,6 @@ int main() {
     read(from_server, buffer, sizeof(buffer));
     printf("received: [%s]\n", buffer);
   }
+
+  close(to_server);
 }

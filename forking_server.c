@@ -2,7 +2,7 @@
 #include <signal.h>
 
 void process(char *s);
-void subserver(int from_client);
+void subserver(int from_client, int to_client);
 
 static void sighandler(int signo) {
     if (signo == SIGINT) {
@@ -26,7 +26,7 @@ int main() {
 
         if (f == 0) {
             to_client = server_connect(from_client);
-            subserver(from_client);
+            subserver(from_client, to_client);
             exit(0);
         }
     }
@@ -34,13 +34,13 @@ int main() {
     return 0;
 }
 
-void subserver(int from_client) {
+void subserver(int from_client, int to_client) {
 
     char buffer[BUFFER_SIZE];
     while( read(from_client, buffer, sizeof(buffer)) ) {
-        printf("[subserver] received %s\n", buffer);
+        printf("[subserver %d] received %s\n", getpid(), buffer);
         process(buffer);
-        printf("[subserver] writing %s\n", buffer);
+        printf("[subserver %d] writing %s\n", getpid(), buffer);
         write(to_client, buffer, sizeof(buffer));
     }
 
