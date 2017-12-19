@@ -17,6 +17,9 @@ int server_setup() {
 
     int from_client;
     from_client = open("luigi", O_RDONLY);
+    if (from_client == -1) {
+        return -1;
+    }
     remove("luigi");
     printf("[server] removed wkp\n");
 
@@ -43,8 +46,10 @@ int server_connect(int from_client) {
     write(to_client, buffer, sizeof(buffer));
     printf("[subserver] wrote %s\n", ACK);
 
-    read(from_client, buffer, sizeof(buffer));
-    // validation here?
+    if (read(from_client, buffer, sizeof(buffer) == -1 || strcmp(buffer, ACK) != 0)) {
+        return -1;
+    }
+
     return to_client;
 }
 
@@ -83,6 +88,7 @@ int server_handshake(int *to_client) {
     printf("[server] handshake received: %s\n", buffer);
 
     return from_client;
+
 }
 
 /*=========================
@@ -96,33 +102,34 @@ int server_handshake(int *to_client) {
   =========================*/
 int client_handshake(int *to_server) {
 
-    int from_server;
-    char buffer[HANDSHAKE_BUFFER_SIZE];
+  int from_server;
+  char buffer[HANDSHAKE_BUFFER_SIZE];
 
-    //send pp name to server
-    printf("[client] handshake: connecting to wkp\n");
-    *to_server = open( "luigi", O_WRONLY, 0);
-    if ( *to_server == -1 )
-        exit(1);
+  //send pp name to server
+  printf("[client] handshake: connecting to wkp\n");
+  *to_server = open( "luigi", O_WRONLY, 0);
+  if ( *to_server == -1 )
+    exit(1);
 
-    //make private pipe
-    sprintf(buffer, "%d", getpid() );
-    mkfifo(buffer, 0600);
+  //make private pipe
+  sprintf(buffer, "%d", getpid() );
+  mkfifo(buffer, 0600);
 
-    write(*to_server, buffer, sizeof(buffer));
+  write(*to_server, buffer, sizeof(buffer));
 
-    //open and wait for connection
-    from_server = open(buffer, O_RDONLY, 0);
-    read(from_server, buffer, sizeof(buffer));
-    /*validate buffer code goes here */
-    printf("[client] handshake: received [%s]\n", buffer);
+  //open and wait for connection
+  from_server = open(buffer, O_RDONLY, 0);
+  read(from_server, buffer, sizeof(buffer));
+  /*validate buffer code goes here */
+  printf("[client] handshake: received [%s]\n", buffer);
 
-    //remove pp
-    remove(buffer);
-    printf("[client] handshake: removed pp\n");
+  //remove pp
+  remove(buffer);
+  printf("[client] handshake: removed pp\n");
 
-    //send ACK to server
-    write(*to_server, ACK, sizeof(buffer));
+  //send ACK to server
+  write(*to_server, ACK, sizeof(buffer));
 
-    return from_server;
+  return from_server;
+
 }
